@@ -1,4 +1,4 @@
-import { Environment } from '@abp/ng.core';
+import { MyEnvironment } from './my-environment';
 
 const baseUrl = 'http://localhost:4200';
 
@@ -12,9 +12,9 @@ export const environment = {
   oAuthConfig: {
     issuer: 'https://localhost:44394',
     redirectUri: baseUrl,
-    clientId: 'EShopOnAbp_App',
+    clientId: 'Web',
     responseType: 'code',
-    scope: 'offline_access EShopOnAbp',
+    scope: 'offline_access openid profile email phone AccountService IdentityService AdministrationService CatalogService OrderingService',
   },
   apis: {
     default: {
@@ -22,4 +22,8 @@ export const environment = {
       rootNamespace: 'EShopOnAbp',
     },
   },
-} as Environment;
+  remoteEnv: {
+    url: '/getEnvConfig',
+    mergeStrategy: 'deepmerge'
+  }
+} as MyEnvironment;

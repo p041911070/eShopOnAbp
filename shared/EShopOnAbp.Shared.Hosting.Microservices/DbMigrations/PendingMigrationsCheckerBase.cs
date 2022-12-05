@@ -1,69 +1,33 @@
-﻿using System;
-using System.Linq;
+﻿using Serilog;
+using System;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Volo.Abp.Data;
+using Volo.Abp;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.EventBus.Distributed;
-using Volo.Abp.MultiTenancy;
-using Volo.Abp.Uow;
 
-namespace EShopOnAbp.Shared.Hosting.Microservices.DbMigrations
+namespace EShopOnAbp.Shared.Hosting.Microservices.DbMigrations;
+
+public abstract class PendingMigrationsCheckerBase : ITransientDependency
 {
-    public abstract class PendingMigrationsCheckerBase<TDbContext> : ITransientDependency
-        where TDbContext : DbContext
+    public async Task TryAsync(Func<Task> task, int retryCount = 3)
     {
-        protected IUnitOfWorkManager UnitOfWorkManager { get; }
-        protected IServiceProvider ServiceProvider { get; }
-        protected ICurrentTenant CurrentTenant { get; }
-        protected IDistributedEventBus DistributedEventBus { get; }
-        protected string DatabaseName { get; }
-    
-        protected PendingMigrationsCheckerBase(
-            IUnitOfWorkManager unitOfWorkManager,
-            IServiceProvider serviceProvider,
-            ICurrentTenant currentTenant,
-            IDistributedEventBus distributedEventBus,
-            string databaseName)
+        try
         {
-            UnitOfWorkManager = unitOfWorkManager;
-            ServiceProvider = serviceProvider;
-            CurrentTenant = currentTenant;
-            DistributedEventBus = distributedEventBus;
-            DatabaseName = databaseName;
+            await task();
         }
-    
-        public virtual async Task<bool> CheckAsync()
+        catch (Exception ex)
         {
-            var isMigrationRequired = false;
+            retryCount--;
 
-            using (CurrentTenant.Change(null))
+            if (retryCount <= 0)
             {
-                // Create database tables if needed
-                using (var uow = UnitOfWorkManager.Begin(requiresNew: true, isTransactional: false))
-                {
-                    var pendingMigrations = await ServiceProvider
-                        .GetRequiredService<TDbContext>()
-                        .Database
-                        .GetPendingMigrationsAsync();
-    
-                    if (pendingMigrations.Any())
-                    {
-                        await DistributedEventBus.PublishAsync(
-                            new ApplyDatabaseMigrationsEto
-                            {
-                                DatabaseName = DatabaseName
-                            }
-                        );
-                        isMigrationRequired = true;
-                    }
-
-                    await uow.CompleteAsync();
-                }
-
-                return isMigrationRequired;
+                throw;
             }
+
+            Log.Warning($"{ex.GetType().Name} has been thrown. The operation will be tried {retryCount} times more. Exception:\n{ex.Message}");
+
+            await Task.Delay(RandomHelper.GetRandom(5000, 15000));
+
+            await TryAsync(task, retryCount);
         }
     }
 }

@@ -18,12 +18,6 @@ namespace EShopOnAbp.Shared.Hosting
         {
             Configure<AbpDbConnectionOptions>(options =>
             {
-                options.Databases.Configure("SaasService", database =>
-                {
-                    database.MappedConnections.Add("AbpTenantManagement");
-                    database.IsUsedByTenants = false;
-                });
-
                 options.Databases.Configure("AdministrationService", database =>
                 {
                     database.MappedConnections.Add("AbpAuditLogging");
@@ -38,11 +32,12 @@ namespace EShopOnAbp.Shared.Hosting
                     database.MappedConnections.Add("AbpIdentity");
                     database.MappedConnections.Add("AbpIdentityServer");
                 });
-                //
-                // options.Databases.Configure("ProductService", database =>
-                // {
-                //     database.MappedConnections.Add("ProductService");
-                // });
+
+                options.Databases.Configure("CmskitService", database =>
+                {
+                    database.MappedConnections.Add("CmsKit");
+                    database.MappedConnections.Add("CmskitService");
+                });
             });
         }
     }

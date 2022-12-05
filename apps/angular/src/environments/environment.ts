@@ -1,4 +1,4 @@
-import { Environment } from '@abp/ng.core';
+import { MyEnvironment } from './my-environment';
 
 const baseUrl = 'http://localhost:4200';
 
@@ -9,18 +9,28 @@ export const environment = {
     name: 'EShopOnAbp',
   },
   oAuthConfig: {
-    issuer: 'https://localhost:44330',
+    issuer: 'http://localhost:8080/realms/master',
     redirectUri: baseUrl,
-    clientId: 'EShopOnAbp_Angular',
+    clientId: 'Web',
     responseType: 'code',
-    scope:
-      'offline_access openid profile email phone IdentityService AdministrationService SaasService',
-    requireHttps: true,
+    scope: 'offline_access openid profile email phone roles AdministrationService IdentityService BasketService CatalogService OrderingService PaymentService CmskitService', 
+    //requireHttps: true,
   },
   apis: {
     default: {
       url: 'https://localhost:44372',
       rootNamespace: 'EShopOnAbp',
+    },
+    Catalog: {
+      url: 'https://localhost:44354',
+      rootNamespace: 'EShopOnAbp.CatalogService',
+    },
+    Ordering: {
+      url: "https://localhost:44356",
+      rootNamespace: 'EShopOnAbp.OrderingService',
     }
   },
-} as Environment;
+  mediaServerUrl:'https://localhost:44335'
+} as MyEnvironment;
+
+

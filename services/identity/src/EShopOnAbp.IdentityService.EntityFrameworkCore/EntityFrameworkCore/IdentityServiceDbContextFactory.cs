@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -15,10 +16,13 @@ namespace EShopOnAbp.IdentityService.EntityFrameworkCore
             IdentityServiceEfCoreEntityExtensionMappings.Configure();
             
             var builder = new DbContextOptionsBuilder<IdentityServiceDbContext>()
-                .UseSqlServer(GetConnectionStringFromConfiguration(), b =>
+                .UseNpgsql(GetConnectionStringFromConfiguration(), b =>
                 {
                     b.MigrationsHistoryTable("__IdentityService_Migrations");
                 });
+
+            // https://www.npgsql.org/efcore/release-notes/6.0.html#opting-out-of-the-new-timestamp-mapping-logic
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
             return new IdentityServiceDbContext(builder.Options);
         }
